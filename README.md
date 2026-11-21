@@ -8,7 +8,8 @@ Jogo 2D em C com Raylib: mova a plataforma, pegue as estrelas e desvie dos meteo
 
 | Nome completo | R.A. |
 |---------------|------|
-| PREENCHER     | PREENCHER |
+| Mateus Valenga dos Santos Arruda | 26038923 |
+| Guilherme Perpetuo | 26025623 |
 
 ## Como jogar
 
