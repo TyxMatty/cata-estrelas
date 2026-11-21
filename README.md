@@ -59,4 +59,4 @@ O jogo não usa arquivos de imagem nem de áudio: tudo é desenhado em código c
 ## Transparência IA
 
 - **Imagens e sprites:** nenhum foi gerado por IA (o jogo não usa sprites).
-- **Código:** O código base foi feito à mão e revisado pelos agentes IA: Claude. Ele arrumou o sistema de movimentação que estava não funcional.
+- **Código:** O código base foi feito à mão e revisado pelos agentes IA: Claude. Ele arrumou o sistema de movimentação que estava não funcional; ele também resumiu o READ-ME e fez 2 commits iniciais.
