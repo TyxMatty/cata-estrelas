@@ -8,16 +8,26 @@ static void Soltar(Jogo *j, bool meteoro) {
 }
 
 int main(void) {
-    Jogo j = { 0 };
+    int vidas = JogoVidasIniciais(NORMAL);
+    assert(JogoVidasIniciais(FACIL) > vidas && vidas > JogoVidasIniciais(DIFICIL));
+
+    Jogo j = { .dificuldade = NORMAL };
     JogoIniciar(&j);
     Soltar(&j, true);
-    assert(j.vidas == VIDAS_INICIAIS && "no menu nada acontece");
+    assert(j.vidas == vidas && "no menu nada acontece");
 
     j.tela = JOGANDO;
     Soltar(&j, false);
     assert(j.pontos == PONTOS_ESTRELA && j.recorde == PONTOS_ESTRELA);
     Soltar(&j, true);
-    assert(j.vidas == VIDAS_INICIAIS - 1 && j.tela == JOGANDO);
+    assert(j.vidas == vidas - 1 && j.tela == JOGANDO);
+
+    j.tela = PAUSA;
+    Soltar(&j, true);
+    JogoAtualizar(&j, 1, 1);
+    assert(j.vidas == vidas - 1 && j.jogadorX == LARGURA / 2.0f && "pausado nada acontece");
+    j.objetos[0].ativo = false;
+    j.tela = JOGANDO;
 
     JogoAtualizar(&j, 100, -1);
     assert(j.jogadorX == JOGADOR_L / 2 && "jogador nao sai da tela");
@@ -26,8 +36,10 @@ int main(void) {
     Soltar(&j, false);
     assert(j.tela == VITORIA);
 
+    j.dificuldade = DIFICIL;
     JogoIniciar(&j);
     assert(j.recorde == PONTOS_VITORIA && j.pontos == 0 && "reinicio mantem o recorde");
+    assert(j.dificuldade == DIFICIL && j.vidas == JogoVidasIniciais(DIFICIL) && "reinicio mantem a dificuldade");
     j.tela = JOGANDO;
     j.vidas = 1;
     Soltar(&j, true);

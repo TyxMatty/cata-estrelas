@@ -2,9 +2,14 @@
 #include <math.h>
 #include <stdlib.h>
 
+int JogoVidasIniciais(int dificuldade) {
+    return (int[]){ 5, 3, 2 }[dificuldade];
+}
+
 void JogoIniciar(Jogo *j) {
-    int recorde = j->recorde;
-    *j = (Jogo){ .tela = MENU, .jogadorX = LARGURA / 2.0f, .vidas = VIDAS_INICIAIS, .recorde = recorde };
+    int recorde = j->recorde, dificuldade = j->dificuldade;
+    *j = (Jogo){ .tela = MENU, .jogadorX = LARGURA / 2.0f, .vidas = JogoVidasIniciais(dificuldade),
+                 .recorde = recorde, .dificuldade = dificuldade };
 }
 
 static void CriarObjeto(Jogo *j) {
@@ -16,7 +21,7 @@ static void CriarObjeto(Jogo *j) {
         o->raio = o->meteoro ? 18.0f : 12.0f;
         o->x = o->raio + rand() % (int)(LARGURA - 2 * o->raio);
         o->y = -o->raio;
-        o->vel = 180.0f + j->pontos * 0.8f + rand() % 100;
+        o->vel = (180.0f + j->pontos * 0.8f + rand() % 100) * (float[]){ 0.8f, 1.0f, 1.25f }[j->dificuldade];
         return;
     }
 }

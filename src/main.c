@@ -7,19 +7,14 @@ static void TextoCentro(const char *t, int y, int tam, Color cor) {
     DrawText(t, (LARGURA - MeasureText(t, tam)) / 2, y, tam, cor);
 }
 
-static void Desenhar(const Jogo *j, bool pausado) {
-    ClearBackground((Color){ 10, 12, 35, 255 });
-    for (int i = 0; i < 70; i++) DrawPixel((i * 137) % LARGURA, (i * 211) % ALTURA, GRAY);
+static void DesenharMenu(const char *titulo, const char *itens[], int n, int sel) {
+    TextoCentro(titulo, 120, 56, GOLD);
+    for (int i = 0; i < n; i++)
+        TextoCentro(i == sel ? TextFormat("> %s <", itens[i]) : itens[i], 270 + i * 50, 30, i == sel ? GOLD : RAYWHITE);
+    TextoCentro("Setas: navegar e ajustar   ENTER: escolher   ESC: voltar", ALTURA - 45, 18, LIGHTGRAY);
+}
 
-    if (j->tela == MENU) {
-        TextoCentro("CATA-ESTRELAS", 150, 60, GOLD);
-        TextoCentro("Pegue as estrelas, desvie dos meteoros", 250, 22, RAYWHITE);
-        TextoCentro(TextFormat("Faca %d pontos para vencer. Voce tem %d vidas.", PONTOS_VITORIA, VIDAS_INICIAIS), 285, 22, RAYWHITE);
-        TextoCentro("Setas ou A/D: mover   P: pausar   ESC: sair", 350, 20, LIGHTGRAY);
-        TextoCentro("ENTER para comecar", 430, 30, GREEN);
-        return;
-    }
-
+static void DesenharCena(const Jogo *j) {
     for (int i = 0; i < MAX_OBJETOS; i++) {
         const Objeto *o = &j->objetos[i];
         if (!o->ativo) continue;
@@ -36,42 +31,100 @@ static void Desenhar(const Jogo *j, bool pausado) {
     DrawText(TextFormat("Pontos: %d / %d", j->pontos, PONTOS_VITORIA), 10, 10, 22, RAYWHITE);
     DrawText(TextFormat("Vidas: %d", j->vidas), 10, 36, 22, RED);
     DrawText(TextFormat("Recorde: %d", j->recorde), LARGURA - 170, 10, 22, GOLD);
+}
 
-    if (pausado) TextoCentro("PAUSADO", 260, 50, RAYWHITE);
-    if (j->tela == VITORIA) TextoCentro("VOCE VENCEU!", 220, 60, GREEN);
-    if (j->tela == DERROTA) TextoCentro("FIM DE JOGO", 220, 60, RED);
-    if (j->tela != JOGANDO) TextoCentro("ENTER para jogar de novo", 320, 26, RAYWHITE);
+static void Desenhar(const Jogo *j, Tela voltar, int sel, bool mostrarFps) {
+    static const char *dificuldades[] = { "Facil", "Normal", "Dificil" };
+    bool cena = j->tela >= JOGANDO || (j->tela == CONFIG && voltar == PAUSA);
+
+    ClearBackground((Color){ 10, 12, 35, 255 });
+    for (int i = 0; i < 70; i++) DrawPixel((i * 137) % LARGURA, (i * 211) % ALTURA, GRAY);
+    if (cena) DesenharCena(j);
+    if (cena && j->tela != JOGANDO) DrawRectangle(0, 0, LARGURA, ALTURA, Fade(BLACK, 0.7f));
+
+    switch (j->tela) {
+    case MENU:
+        DesenharMenu("CATA-ESTRELAS", (const char *[]){ "Jogar", "Configuracoes", "Sair" }, 3, sel);
+        TextoCentro(TextFormat("Pegue estrelas, desvie dos meteoros e faca %d pontos", PONTOS_VITORIA), 195, 20, RAYWHITE);
+        break;
+    case CONFIG:
+        DesenharMenu("CONFIGURACOES", (const char *[]){
+            TextFormat("Dificuldade: %s (%d vidas)", dificuldades[j->dificuldade], JogoVidasIniciais(j->dificuldade)),
+            TextFormat("Mostrar FPS: %s", mostrarFps ? "Sim" : "Nao"),
+            "Voltar" }, 3, sel);
+        if (voltar == PAUSA) TextoCentro("As vidas da nova dificuldade valem na proxima partida", 200, 18, LIGHTGRAY);
+        break;
+    case PAUSA:
+        DesenharMenu("PAUSADO", (const char *[]){ "Continuar", "Configuracoes", "Menu principal" }, 3, sel);
+        break;
+    case VITORIA:
+    case DERROTA:
+        TextoCentro(j->tela == VITORIA ? "VOCE VENCEU!" : "FIM DE JOGO", 200, 60, j->tela == VITORIA ? GREEN : RED);
+        TextoCentro("ENTER: jogar de novo   ESC: menu principal", 300, 24, RAYWHITE);
+        break;
+    default:
+        break;
+    }
+    if (mostrarFps) DrawFPS(LARGURA - 95, ALTURA - 25);
 }
 
 int main(int argc, char **argv) {
-    (void)argv;
-    bool demo = argc > 1;
+    int demo = argc > 1 ? atoi(argv[1]) : -1;
     srand(time(NULL));
     InitWindow(LARGURA, ALTURA, "Cata-Estrelas");
     SetTargetFPS(60);
+    SetExitKey(KEY_NULL);
 
-    Jogo j = { 0 };
+    Jogo j = { .dificuldade = NORMAL };
     JogoIniciar(&j);
-    if (demo) j.tela = JOGANDO;
-    bool pausado = false;
-    int quadros = 0;
+    if (demo >= 0) j.tela = demo;
+    Tela voltar = MENU;
+    int sel = 0, quadros = 0;
+    bool mostrarFps = false, sair = false;
 
-    while (!WindowShouldClose()) {
-        if (j.tela != JOGANDO && IsKeyPressed(KEY_ENTER)) {
-            JogoIniciar(&j);
-            j.tela = JOGANDO;
-            pausado = false;
+    while (!sair && !WindowShouldClose()) {
+        bool enter = IsKeyPressed(KEY_ENTER), esc = IsKeyPressed(KEY_ESCAPE), p = IsKeyPressed(KEY_P);
+        int lado = (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) - (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A));
+        Tela antes = j.tela;
+
+        if (j.tela == MENU || j.tela == CONFIG || j.tela == PAUSA)
+            sel = (sel + 3 + (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) - (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))) % 3;
+
+        switch (j.tela) {
+        case MENU:
+            if (enter && sel == 0) { JogoIniciar(&j); j.tela = JOGANDO; }
+            if (enter && sel == 1) { voltar = MENU; j.tela = CONFIG; }
+            if (enter && sel == 2) sair = true;
+            break;
+        case CONFIG:
+            if (sel == 0 && (lado || enter)) j.dificuldade = (j.dificuldade + (lado ? lado : 1) + 3) % 3;
+            if (sel == 1 && (lado || enter)) mostrarFps = !mostrarFps;
+            if (esc || (enter && sel == 2)) j.tela = voltar;
+            break;
+        case JOGANDO:
+            if (esc || p) j.tela = PAUSA;
+            break;
+        case PAUSA:
+            if (esc || p || (enter && sel == 0)) j.tela = JOGANDO;
+            else if (enter && sel == 1) { voltar = PAUSA; j.tela = CONFIG; }
+            else if (enter && sel == 2) JogoIniciar(&j);
+            break;
+        case VITORIA:
+        case DERROTA:
+            if (enter) { JogoIniciar(&j); j.tela = JOGANDO; }
+            else if (esc) JogoIniciar(&j);
+            break;
         }
-        if (j.tela == JOGANDO && IsKeyPressed(KEY_P)) pausado = !pausado;
-        float direcao = (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) - (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A));
+        if (j.tela != antes) sel = 0;
 
-        if (!pausado) JogoAtualizar(&j, GetFrameTime(), direcao);
+        float direcao = (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) - (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A));
+        JogoAtualizar(&j, GetFrameTime(), direcao);
 
         BeginDrawing();
-        Desenhar(&j, pausado);
+        Desenhar(&j, voltar, sel, mostrarFps);
         EndDrawing();
 
-        if (demo && ++quadros == 150) { TakeScreenshot("screenshot.png"); break; }
+        if (demo >= 0 && ++quadros == 150) { TakeScreenshot("screenshot.png"); break; }
     }
     CloseWindow();
     return 0;

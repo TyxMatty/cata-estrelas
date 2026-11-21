@@ -14,14 +14,18 @@ Jogo 2D em C com Raylib: mova a plataforma, pegue as estrelas e desvie dos meteo
 ## Como jogar
 
 - **Objetivo:** fazer 300 pontos (cada estrela vale 10). O jogo acelera conforme você pontua.
-- **Derrota:** cada meteoro tira 1 das 3 vidas; sem vidas, fim de jogo.
+- **Derrota:** cada meteoro tira 1 vida; sem vidas, fim de jogo.
+- **Menu inicial:** Jogar, Configurações e Sair.
+- **Configurações:** dificuldade (Fácil 5 vidas, Normal 3, Difícil 2; quanto mais difícil, mais rápido tudo cai) e mostrar FPS. Também abre pelo menu de pausa.
+- **Pausa:** Continuar, Configurações e Menu principal.
 
 | Tecla | Ação |
 |-------|------|
-| Setas ← → ou A / D | Mover |
-| ENTER | Começar / jogar de novo |
-| P | Pausar |
-| ESC | Sair |
+| Setas ← → ou A / D | Mover a plataforma; ajustar opção nas configurações |
+| Setas ↑ ↓ ou W / S | Navegar nos menus |
+| ENTER | Escolher opção / jogar de novo |
+| P ou ESC | Pausar e continuar |
+| ESC | Voltar (nas configurações e no fim de jogo) |
 
 ## Instalação
 

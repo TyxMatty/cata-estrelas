@@ -9,11 +9,12 @@
 #define JOGADOR_Y (ALTURA - 50.0f)
 #define JOGADOR_VEL 480.0f
 #define MAX_OBJETOS 32
-#define VIDAS_INICIAIS 3
+
 #define PONTOS_ESTRELA 10
 #define PONTOS_VITORIA 300
 
-typedef enum { MENU, JOGANDO, VITORIA, DERROTA } Tela;
+typedef enum { MENU, CONFIG, JOGANDO, PAUSA, VITORIA, DERROTA } Tela;
+typedef enum { FACIL, NORMAL, DIFICIL } Dificuldade;
 
 typedef struct {
     float x, y, raio, vel;
@@ -23,11 +24,12 @@ typedef struct {
 typedef struct {
     Tela tela;
     float jogadorX;
-    int pontos, vidas, recorde;
+    int pontos, vidas, recorde, dificuldade;
     float tempoSpawn;
     Objeto objetos[MAX_OBJETOS];
 } Jogo;
 
+int JogoVidasIniciais(int dificuldade);
 void JogoIniciar(Jogo *j);
 void JogoAtualizar(Jogo *j, float dt, float direcao);
 
