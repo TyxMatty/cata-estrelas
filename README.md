@@ -2,7 +2,7 @@
 
 Jogo 2D em C com Raylib: mova a plataforma, pegue as estrelas e desvie dos meteoros.
 
-![Tela do jogo](screenshot.png)
+![Menu inicial do jogo](menu.gif)
 
 ## Integrantes
 
